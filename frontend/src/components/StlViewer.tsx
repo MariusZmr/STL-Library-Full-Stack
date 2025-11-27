@@ -6,7 +6,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 // A simple loader component to show while the model is loading
 function Loader() {
   const { progress } = useProgress();
-  return <Html center>{Math.round(progress)} % loaded</Html>;
+  return <Html center className="text-foreground">{Math.round(progress)} % loaded</Html>;
 }
 
 // The component that loads and displays the STL model
@@ -15,7 +15,7 @@ function Model({ url }: { url: string }) {
   
   return (
     <mesh geometry={geom} scale={0.05}>
-      <meshStandardMaterial color="hotpink" />
+      <meshStandardMaterial color="hsl(var(--primary))" /> {/* Use shadcn primary color */}
     </mesh>
   );
 }
@@ -26,7 +26,7 @@ interface StlViewerProps {
 
 const StlViewer: React.FC<StlViewerProps> = ({ s3Url }) => {
   return (
-    <div style={{ height: '140px', width: '100%', background: '#f0f0f0' }}>
+    <div className="h-[140px] w-full bg-gray-100 dark:bg-gray-800"> {/* Replaced inline style with Tailwind */}
       <Canvas dpr={[1, 2]} camera={{ fov: 45 }}>
         <Suspense fallback={<Loader />}>
           <Stage environment="city" intensity={0.6}>

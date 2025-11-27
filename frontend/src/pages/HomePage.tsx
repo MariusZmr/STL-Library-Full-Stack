@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, TextField, Box, Typography, Skeleton, Card, CardContent, Pagination, Stack } from '@mui/material';
-import FileCard from '../components/FileCard';
 import { useFiles } from '../contexts/FileContext';
 import { useDebounce } from '../hooks/useDebounce';
+import FileCard from '../components/FileCard';
+import { Input } from '@/components/ui/input'; // shadcn/ui Input
+import { Card, CardContent } from '@/components/ui/card'; // shadcn/ui Card
+import { Skeleton } from '@/components/ui/skeleton'; // shadcn/ui Skeleton
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'; // shadcn/ui Pagination components
 
 // This component renders the skeleton placeholders
 const FileCardSkeleton = () => (
-  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Skeleton variant="rectangular" height={140} />
-    <CardContent sx={{ flexGrow: 1 }}>
-      <Skeleton variant="text" sx={{ fontSize: '1.25rem' }} />
-      <Skeleton variant="text" />
-      <Skeleton variant="text" />
+  <Card className="h-full flex flex-col">
+    <Skeleton className="h-[140px] w-full rounded-b-none" />
+    <CardContent className="flex-grow p-4 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
     </CardContent>
-    <Box sx={{ p: 2 }}>
-      <Skeleton variant="rounded" width={80} height={30} />
-    </Box>
+    <div className="p-4 pt-0">
+      <Skeleton className="h-8 w-20 rounded-md" />
+    </div>
   </Card>
 );
 
@@ -26,56 +36,71 @@ const HomePage: React.FC = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
-    // Fetch page 1 whenever the search term changes
-    fetchFiles(1, debouncedSearchTerm);
-  }, [debouncedSearchTerm, fetchFiles]);
+    fetchFiles(currentPage, debouncedSearchTerm); // Fetch current page on initial load and search term change
+  }, [debouncedSearchTerm, fetchFiles, currentPage]); // Added currentPage as dependency
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    fetchFiles(value, debouncedSearchTerm);
+  const handlePageChange = (pageNumber: number) => {
+    fetchFiles(pageNumber, debouncedSearchTerm);
   };
 
   return (
     <>
-      <Typography variant="h4" component="h1" gutterBottom>
-        STL File Library
-      </Typography>
-      <Box sx={{ mb: 4 }}>
-        <TextField
-          fullWidth
-          label="Search for files..."
-          variant="outlined"
+      <h1 className="text-3xl font-bold mb-6 text-center">STL File Library</h1>
+      <div className="mb-6">
+        <Input
+          type="text"
+          placeholder="Search for files..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 border rounded-md"
         />
-      </Box>
+      </div>
 
-      <Grid container spacing={4}>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           // Render 9 skeleton cards to match the page limit
           Array.from(new Array(9)).map((_, index) => (
-            <Grid key={index} xs={12} sm={6} md={4}>
+            <div key={index}>
               <FileCardSkeleton />
-            </Grid>
+            </div>
           ))
         ) : (
           files.map(file => (
-            <Grid key={file.id} xs={12} sm={6} md={4}>
+            <div key={file.id}>
               <FileCard file={file} />
-            </Grid>
+            </div>
           ))
         )}
-      </Grid>
+      </div>
       
       {/* Pagination Controls */}
       {!loading && totalPages > 1 && (
-        <Stack spacing={2} sx={{ mt: 4, alignItems: 'center' }}>
-          <Pagination 
-            count={totalPages} 
-            page={currentPage} 
-            onChange={handlePageChange} 
-            color="primary" 
-          />
-        </Stack>
+        <div className="flex justify-center mt-8">
+          <Pagination>
+            <PaginationContent>
+              {currentPage > 1 && (
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} />
+                </PaginationItem>
+              )}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    isActive={page === currentPage} 
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              {currentPage < totalPages && (
+                <PaginationItem>
+                  <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
     </>
   );

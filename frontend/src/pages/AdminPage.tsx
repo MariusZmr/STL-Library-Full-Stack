@@ -1,33 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  CircularProgress,
-  Grid
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { useFiles } from '../contexts/FileContext';
 import { toast } from 'react-toastify';
 import StlViewer from '../components/StlViewer'; // Import the viewer
+import { Button } from '@/components/ui/button'; // shadcn/ui Button
+import { Input } from '@/components/ui/input';   // shadcn/ui Input
+import { Label } from '@/components/ui/label';   // shadcn/ui Label
+import { Textarea } from '@/components/ui/textarea'; // Import the Textarea component
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // shadcn/ui Card
+import { Skeleton } from '@/components/ui/skeleton'; // shadcn/ui Skeleton
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table'; // shadcn/ui Table components
+import { Pencil, Trash2 } from 'lucide-react'; // Lucide icons
 
 const AdminPage: React.FC = () => {
   const { files, loading, addFile, removeFile } = useFiles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // State for the preview URL
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Effect to clean up object URL on component unmount
   useEffect(() => {
@@ -39,23 +35,18 @@ const AdminPage: React.FC = () => {
   }, [previewUrl]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Clean up previous URL if it exists
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-
     const file = event.target.files?.[0];
-    // VALIDATION FIX: Check file extension instead of MIME type for reliability
     if (file && file.name.toLowerCase().endsWith('.stl')) {
       setSelectedFile(file);
-      // Create a new local URL for the selected file
       setPreviewUrl(URL.createObjectURL(file));
     } else {
-      if (file) { // Only show a warning if a file was actually selected
+      if (file) {
         toast.warn('Please select a valid .stl file.');
       }
-      // Clear the file input if the file is invalid or selection is cancelled
-      if(event.target) event.target.value = '';
+      if(event.target) (event.target as HTMLInputElement).value = ''; // Clear file input
       setSelectedFile(null);
       setPreviewUrl(null);
     }
@@ -67,7 +58,6 @@ const AdminPage: React.FC = () => {
       toast.warn('All fields, including the file, are required.');
       return;
     }
-
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
@@ -75,7 +65,6 @@ const AdminPage: React.FC = () => {
 
     try {
       await addFile(formData);
-      // Reset form and preview on success
       setName('');
       setDescription('');
       setSelectedFile(null);
@@ -83,85 +72,102 @@ const AdminPage: React.FC = () => {
       const fileInput = document.getElementById('file-input') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
     } catch (err) {
-      // Error is handled by the context's toast
+      // Handled by context
     }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Admin Panel
-      </Typography>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
 
-      <Paper sx={{ p: 2, mb: 4 }}>
-        <Grid container spacing={2} alignItems="flex-start">
-          {/* Upload Form */}
-          <Grid item xs={12} md={previewUrl ? 6 : 12}>
-            <Typography variant="h6" gutterBottom>
-              Upload New STL File
-            </Typography>
-            <Box component="form" onSubmit={handleUploadSubmit} noValidate>
-              <TextField fullWidth margin="normal" label="File Name / Title" value={name} onChange={(e) => setName(e.target.value)} required />
-              <TextField fullWidth margin="normal" label="Description" multiline rows={4} value={description} onChange={(e) => setDescription(e.target.value)} required />
-              <Button variant="contained" component="label" sx={{ mt: 2 }}>
-                Choose File
-                <input id="file-input" type="file" hidden accept=".stl" onChange={handleFileChange} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {/* Upload Form */}
+        <Card className={previewUrl ? "" : "md:col-span-2"}>
+          <CardHeader>
+            <CardTitle className="text-xl">Upload New STL File</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUploadSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">File Name / Title</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="file-input">Choose File</Label>
+                <Input id="file-input" type="file" accept=".stl" onChange={handleFileChange} className="w-auto" />
+                {selectedFile && <span className="text-sm italic text-gray-500">{selectedFile.name}</span>}
+              </div>
+              <Button type="submit" className="w-full">
+                Upload File
               </Button>
-              {selectedFile && <Typography sx={{ display: 'inline', ml: 2, fontStyle: 'italic' }}>{selectedFile.name}</Typography>}
-              <Button type="submit" variant="contained" color="primary" sx={{ display: 'block', mt: 2 }}>
-                Upload
-              </Button>
-            </Box>
-          </Grid>
+            </form>
+          </CardContent>
+        </Card>
 
-          {/* Preview Pane */}
-          {previewUrl && (
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Preview
-              </Typography>
-              <Box sx={{ border: '1px solid lightgray', borderRadius: '4px' }}>
-                <StlViewer s3Url={previewUrl} />
-              </Box>
-            </Grid>
-          )}
-        </Grid>
-      </Paper>
+        {/* Preview Pane */}
+        {previewUrl && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="h-64"> {/* Fixed height for preview */}
+              <StlViewer s3Url={previewUrl} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* File Management Table */}
-      <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
-        Manage Existing Files
-      </Typography>
-      {loading ? <CircularProgress /> : (
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
+      <h2 className="text-2xl font-bold mb-4">Manage Existing Files</h2>
+      {loading ? (
+        <div className="flex justify-center">
+          <Skeleton className="h-10 w-full rounded-md" /> {/* Table header skeleton */}
+          {Array.from({ length: 5 }).map((_, i) => ( // 5 rows of skeleton
+            <Skeleton key={i} className="h-10 w-full rounded-md mt-2" />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell>File Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableHead>File Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
-              {files.map((file) => (
-                <TableRow key={file.id}>
-                  <TableCell component="th" scope="row">{file.name}</TableCell>
-                  <TableCell>{file.description}</TableCell>
-                  <TableCell align="right">
-                    <IconButton aria-label="edit" onClick={() => toast.info('Editing is not implemented yet.')}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton aria-label="delete" onClick={() => removeFile(file.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+              {files.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center">
+                    No files found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                files.map((file) => (
+                  <TableRow key={file.id}>
+                    <TableCell className="font-medium">{file.name}</TableCell>
+                    <TableCell>{file.description}</TableCell>
+                    <TableCell className="text-right flex justify-end space-x-2">
+                      <Button variant="outline" size="icon" onClick={() => toast.info('Editing is not implemented yet.')}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="icon" onClick={() => removeFile(file.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </div>
       )}
-    </Container>
+    </div>
   );
 };
 
