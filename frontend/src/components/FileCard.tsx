@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Link } from 'react-router-dom'; // Import Link
+import { Link } from 'react-router-dom';
 import type { StlFile } from "../types";
-import StlViewer from "./StlViewer";
+// import StlViewer from "./StlViewer"; // StlViewer is no longer used here
 import axios from "axios";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+// import { Skeleton } from "@/components/ui/skeleton"; // Skeleton for loading state on button
 
 interface FileCardProps {
   file: StlFile;
@@ -15,7 +15,7 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async (event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent event from bubbling up to the Link
+    event.stopPropagation();
     setIsDownloading(true);
     try {
       const response = await axios({
@@ -49,9 +49,16 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
   };
 
   return (
-    <Link to={`/files/${file.id}`} className="block"> {/* Wrap the Card with Link */}
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200"> {/* Add hover effect */}
-        <StlViewer s3Url={file.s3Url} />
+    <Link to={`/files/${file.id}`} className="block">
+      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
+        {/* Display thumbnail image instead of StlViewer */}
+        <div className="relative h-[140px] w-full overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          {file.thumbnailS3Url ? (
+            <img src={file.thumbnailS3Url} alt={`Thumbnail for ${file.name}`} className="object-cover h-full w-full" />
+          ) : (
+            <span className="text-muted-foreground text-sm">No Thumbnail</span>
+          )}
+        </div>
 
         <CardContent className="flex-grow p-4">
           <h3 className="text-lg font-semibold mb-1">{file.name}</h3>

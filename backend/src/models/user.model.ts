@@ -9,10 +9,11 @@ interface UserAttributes {
   lastName: string;
   email: string;
   password?: string;
+  role: string; // New field
 }
 
 // Interface for User creation attributes (password is required)
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'role'> { // 'role' is optional on creation as it has a default
     password?: string;
 }
 
@@ -22,6 +23,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public lastName!: string;
   public email!: string;
   public password?: string;
+  public role!: string; // New field
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -59,6 +61,11 @@ User.init(
     },
     password: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    role: { // New field definition
+      type: DataTypes.STRING,
+      defaultValue: 'user', // Default role for new users
       allowNull: false,
     },
   },

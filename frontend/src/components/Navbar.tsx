@@ -18,13 +18,13 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-xl font-bold flex items-center gap-2 hover:text-gray-300">
           <Home className="h-5 w-5" />
-          STL Library
+          STL Shelf
         </Link>
 
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <span className="text-sm">Welcome, {user?.name || 'User'}</span>
+              <span className="text-sm">Welcome, {user?.firstName || 'User'}</span> 
               <Link to="/admin" className="p-2 rounded hover:bg-gray-700 flex items-center gap-1">
                 <UserRoundCog className="h-5 w-5" />
                 Admin

@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-6 text-center">STL File Library</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">STL Shelf</h1>
       <div className="mb-6">
         <Input
           type="text"
