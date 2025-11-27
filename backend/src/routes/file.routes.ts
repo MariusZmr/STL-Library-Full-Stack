@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getFiles, uploadFile, deleteFile } from '../controllers/file.controller';
+import { getFiles, uploadFile, deleteFile, getFileById } from '../controllers/file.controller'; // Import getFileById
 import upload from '../utils/fileUpload';
 import authMiddleware from '../middleware/auth.middleware';
 
@@ -9,6 +9,11 @@ const router = Router();
 // @desc    Get all files
 // @access  Public
 router.get('/', getFiles);
+
+// @route   GET /api/files/:id
+// @desc    Get a single file by ID
+// @access  Public (for now, can be made private later)
+router.get('/:id', getFileById); // New route
 
 // @route   POST /api/files/upload
 // @desc    Upload a new STL file

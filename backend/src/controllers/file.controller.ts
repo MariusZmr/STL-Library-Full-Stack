@@ -117,3 +117,25 @@ export const deleteFile = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'An unknown error occurred.' });
     }
 };
+
+export const getFileById = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const file = await StlFile.findByPk(id, {
+            include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName'] }],
+        });
+
+        if (!file) {
+            return res.status(404).json({ message: 'File not found.' });
+        }
+
+        res.status(200).json(file);
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: 'Error fetching file.', error: error.message });
+        }
+        res.status(500).json({ message: 'An unknown error occurred.' });
+    }
+};
+
