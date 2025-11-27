@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { sequelize } from './models';
 import authRoutes from './routes/auth.routes';
-import fileRoutes from './routes/file.routes'; // Import file routes
+import fileRoutes from './routes/file.routes';
+import userRoutes from './routes/user.routes'; // Import user routes
 
 dotenv.config();
 
@@ -16,7 +17,8 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/files', fileRoutes); // Use file routes
+app.use('/api/files', fileRoutes);
+app.use('/api/users', userRoutes); // Use user routes
 
 // Basic route
 app.get('/', (req, res) => {
