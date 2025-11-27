@@ -1,15 +1,20 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify'; // Import toast
 
 const ProtectedRoute: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to. This allows us to send them along to that page after they login,
-    // which is a nicer user experience than dropping them off on the home page.
+    toast.warn('You need to log in to access this page.');
     return <Navigate to="/login" replace />;
+  }
+
+  // Check for admin role
+  if (user?.role !== 'admin') {
+    toast.error('Access denied. Admin privileges required.');
+    return <Navigate to="/" replace />; // Redirect to homepage or a 403 page
   }
 
   return <Outlet />;

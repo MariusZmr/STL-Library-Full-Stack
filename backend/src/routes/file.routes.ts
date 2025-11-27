@@ -18,17 +18,17 @@ router.get('/:id', getFileById); // New route
 // @route   PUT /api/files/:id
 // @desc    Update a file's details
 // @access  Private
-router.put('/:id', authMiddleware, updateFile); // New route
+router.put('/:id', authMiddleware, adminMiddleware, updateFile); // Added adminMiddleware
 
 // @route   POST /api/files/upload
 // @desc    Upload a new STL file
-// @access  Private
+// @access  Private (requires auth and admin roles)
 // The 'file' field in the form-data is the name of the file input
-router.post('/upload', authMiddleware, upload.single('file'), uploadFile);
+router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), uploadFile); // Added adminMiddleware
 
 // @route   DELETE /api/files/:id
 // @desc    Delete a file
-// @access  Private
-router.delete('/:id', authMiddleware, deleteFile);
+// @access  Private (requires auth and admin roles)
+router.delete('/:id', authMiddleware, adminMiddleware, deleteFile); // Added adminMiddleware
 
 export default router;
