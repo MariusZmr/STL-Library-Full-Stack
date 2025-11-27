@@ -3,6 +3,7 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import AdminPage from '../pages/AdminPage';
+import FileDetailPage from '../pages/FileDetailPage'; // Import FileDetailPage
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes = () => {
@@ -12,6 +13,10 @@ const AppRoutes = () => {
     {
       path: '/',
       element: <HomePage />,
+    },
+    { // Add the new FileDetailPage route
+      path: '/files/:id',
+      element: <FileDetailPage />,
     },
     {
       path: '/admin',

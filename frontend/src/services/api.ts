@@ -67,3 +67,9 @@ export const deleteFile = async (fileId: string) => {
   const response = await apiClient.delete(`/files/${fileId}`);
   return response.data;
 };
+
+export const getFileById = async (id: string): Promise<StlFile> => {
+  const response = await apiClient.get(`/files/${id}`);
+  return response.data;
+};
+

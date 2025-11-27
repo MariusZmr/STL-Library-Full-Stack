@@ -139,3 +139,41 @@ export const getFileById = async (req: Request, res: Response) => {
     }
 };
 
+export const updateFile = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const userId = req.user?.id; // Assuming user ID is available from auth middleware
+
+    // Basic validation
+    if (!name || !description) {
+        return res.status(400).json({ message: 'Name and description are required.' });
+    }
+
+    try {
+        const file = await StlFile.findByPk(id);
+
+        if (!file) {
+            return res.status(404).json({ message: 'File not found.' });
+        }
+
+        // Authorization check: Only the owner can update the file
+        if (file.userId !== userId) {
+            return res.status(403).json({ message: 'User not authorized to update this file.' });
+        }
+
+        // Update the file details
+        file.name = name;
+        file.description = description;
+        await file.save(); // Save changes to the database
+
+        res.status(200).json(file); // Return the updated file
+
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: 'Error updating file.', error: error.message });
+        }
+        res.status(500).json({ message: 'An unknown error occurred.' });
+    }
+};
+
+
