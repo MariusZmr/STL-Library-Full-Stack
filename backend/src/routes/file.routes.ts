@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getFiles, uploadFile, deleteFile, getFileById, updateFile } from '../controllers/file.controller'; // Import updateFile
 import upload from '../utils/fileUpload';
-import authMiddleware from '../middleware/auth.middleware';
+import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware'; // Changed to named import for authMiddleware and added adminMiddleware
 
 const router = Router();
 
