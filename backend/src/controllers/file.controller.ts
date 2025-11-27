@@ -49,13 +49,50 @@ export const getFiles = async (req: Request, res: Response) => {
     }
 };
 
+import { Request, Response } from 'express';
+import { StlFile, User } from '../models';
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'; // Import PutObjectCommand
+import s3Client from '../config/s3';
+import { Op } from 'sequelize';
+
+// Extend the Multer S3 file type to include location and key
+interface S3File extends Express.Multer.File {
+    key: string;
+    location: string;
+}
+
+// ... (getFiles, getFileById, updateFile, deleteFile functions remain the same)
+
+// Utility to upload base64 image to S3
+const uploadBase64ImageToS3 = async (base64Data: string, keyPrefix: string, userId: string): Promise<string> => {
+    // Remove "data:image/png;base64," prefix
+    const base64Image = base64Data.split(';base64,').pop();
+    if (!base64Image) {
+        throw new Error('Invalid base64 image data.');
+    }
+    const buffer = Buffer.from(base64Image, 'base64');
+    const key = `${keyPrefix}/${userId}-${Date.now()}.png`;
+
+    const uploadParams = {
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: key,
+        Body: buffer,
+        ContentType: 'image/png',
+        ACL: 'public-read' // Thumbnail should be public
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+};
+
+
 export const uploadFile = async (req: Request, res: Response) => {
-    const { name, description } = req.body;
+    const { name, description, thumbnail } = req.body; // Get thumbnail data
     const file = req.file as S3File;
     const userId = req.user?.id;
 
     if (!file) {
-        return res.status(400).json({ message: 'File not provided.' });
+        return res.status(400).json({ message: 'STL File not provided.' });
     }
     if (!userId) {
         return res.status(401).json({ message: 'User not authenticated.' });
@@ -63,20 +100,29 @@ export const uploadFile = async (req: Request, res: Response) => {
     if (!name || !description) {
         return res.status(400).json({ message: 'Name and description are required.' });
     }
+    if (!thumbnail) { // Thumbnail is now required
+        return res.status(400).json({ message: 'Thumbnail image is required.' });
+    }
 
     try {
+        // Upload thumbnail image to S3
+        const thumbnailS3Url = await uploadBase64ImageToS3(thumbnail, 'thumbnails', userId);
+
         const newStlFile = await StlFile.create({
             name,
             description,
             s3Key: file.key,
             s3Url: file.location,
+            thumbnailS3Url, // Save thumbnail URL
             userId,
         });
 
         res.status(201).json(newStlFile);
     } catch (error) {
+        // If thumbnail upload fails, should we delete the STL file from S3?
+        // For now, let's just log and return 500.
         if (error instanceof Error) {
-            return res.status(500).json({ message: 'Error saving file metadata.', error: error.message });
+            return res.status(500).json({ message: 'Error saving file or thumbnail metadata.', error: error.message });
         }
         res.status(500).json({ message: 'An unknown error occurred.' });
     }
