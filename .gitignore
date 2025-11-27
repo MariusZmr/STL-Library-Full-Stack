@@ -1,0 +1,20 @@
+# Directorii de dependențe
+node_modules/
+# Variabile de mediu și secrete
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Fișiere generate la build (backend și frontend)
+dist/
+build/
+# Log-uri
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fișiere specifice sistemului de operare
+.DS_Store
