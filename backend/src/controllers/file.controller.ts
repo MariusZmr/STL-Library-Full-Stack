@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { StlFile, User } from '../models';
-import { DeleteObjectCommand, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'; // Removed ObjectCannedACL
 import s3Client from '../config/s3';
 import { Op } from 'sequelize';
 
@@ -25,7 +25,7 @@ const uploadBase64ImageToS3 = async (base64Data: string, keyPrefix: string, user
         Key: key,
         Body: buffer,
         ContentType: 'image/png',
-        ACL: ObjectCannedACL.public_read // Corrected type for ACL
+        // ACL: ObjectCannedACL.public_read // <<< REMOVED THIS LINE
     };
 
     await s3Client.send(new PutObjectCommand(uploadParams));
