@@ -21,6 +21,9 @@ const s3Client = new S3Client({
     accessKeyId,
     secretAccessKey,
   },
+  // Adding these for explicit behavior, often recommended for specific S3 setups
+  forcePathStyle: true, // Forces path-style URLs for S3 (e.g., s3.amazonaws.com/bucket-name)
+  disableHostPrefix: true // Prevents adding bucket name as prefix to the hostname
 });
 
 export default s3Client;
