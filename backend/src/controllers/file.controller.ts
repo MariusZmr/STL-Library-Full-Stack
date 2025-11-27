@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { StlFile, User } from '../models';
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
 import s3Client from '../config/s3';
+import { Op } from 'sequelize';
 
 // Extend the Multer S3 file type to include location and key
 interface S3File extends Express.Multer.File {
@@ -9,9 +10,28 @@ interface S3File extends Express.Multer.File {
     location: string;
 }
 
-import { Op } from 'sequelize'; // Import Op for search queries
+// Utility to upload base64 image to S3
+const uploadBase64ImageToS3 = async (base64Data: string, keyPrefix: string, userId: string): Promise<string> => {
+    // Remove "data:image/png;base64," prefix
+    const base64Image = base64Data.split(';base64,').pop();
+    if (!base64Image) {
+        throw new Error('Invalid base64 image data.');
+    }
+    const buffer = Buffer.from(base64Image, 'base64');
+    const key = `${keyPrefix}/${userId}-${Date.now()}.png`;
 
-// ... (interface S3File is already defined in the original file)
+    const uploadParams = {
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: key,
+        Body: buffer,
+        ContentType: 'image/png',
+        ACL: ObjectCannedACL.public_read // Corrected type for ACL
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+};
+
 
 export const getFiles = async (req: Request, res: Response) => {
     try {
@@ -48,43 +68,6 @@ export const getFiles = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'An unknown error occurred.' });
     }
 };
-
-import { Request, Response } from 'express';
-import { StlFile, User } from '../models';
-import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'; // Import PutObjectCommand
-import s3Client from '../config/s3';
-import { Op } from 'sequelize';
-
-// Extend the Multer S3 file type to include location and key
-interface S3File extends Express.Multer.File {
-    key: string;
-    location: string;
-}
-
-// ... (getFiles, getFileById, updateFile, deleteFile functions remain the same)
-
-// Utility to upload base64 image to S3
-const uploadBase64ImageToS3 = async (base64Data: string, keyPrefix: string, userId: string): Promise<string> => {
-    // Remove "data:image/png;base64," prefix
-    const base64Image = base64Data.split(';base64,').pop();
-    if (!base64Image) {
-        throw new Error('Invalid base64 image data.');
-    }
-    const buffer = Buffer.from(base64Image, 'base64');
-    const key = `${keyPrefix}/${userId}-${Date.now()}.png`;
-
-    const uploadParams = {
-        Bucket: process.env.AWS_BUCKET_NAME!,
-        Key: key,
-        Body: buffer,
-        ContentType: 'image/png',
-        ACL: 'public-read' // Thumbnail should be public
-    };
-
-    await s3Client.send(new PutObjectCommand(uploadParams));
-    return `https://${uploadParams.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-};
-
 
 export const uploadFile = async (req: Request, res: Response) => {
     const { name, description, thumbnail } = req.body; // Get thumbnail data
@@ -139,7 +122,7 @@ export const deleteFile = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'File not found.' });
         }
 
-        // Optional: Add role-based access control later. For now, only the user who uploaded it can delete it.
+        // Authorization check: Only the owner can update the file
         if (file.userId !== userId) {
             return res.status(403).json({ message: 'User not authorized to delete this file.' });
         }
@@ -221,5 +204,3 @@ export const updateFile = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'An unknown error occurred.' });
     }
 };
-
-
