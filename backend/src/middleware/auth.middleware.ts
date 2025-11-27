@@ -33,3 +33,11 @@ export const adminMiddleware = (req: Request, res: Response, next: NextFunction)
   }
   next();
 };
+
+// Middleware to check if the authenticated user has either 'admin' or 'manager' role
+export const managerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'manager')) {
+    return res.status(403).json({ message: 'Access denied. Manager or Admin privileges required.' });
+  }
+  next();
+};
