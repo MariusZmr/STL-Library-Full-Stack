@@ -33,9 +33,23 @@ export const register = async (userInfo: any) => {
   return response.data;
 };
 
+// Define the expected shape of the paginated response
+interface PaginatedFilesResponse {
+  files: StlFile[];
+  totalPages: number;
+  currentPage: number;
+  totalFiles: number;
+}
+
 // FILES
-export const getFiles = async (searchTerm?: string): Promise<StlFile[]> => {
-  const response = await apiClient.get('/files', { params: { search: searchTerm } });
+export const getFiles = async (page: number = 1, searchTerm?: string): Promise<PaginatedFilesResponse> => {
+  const response = await apiClient.get('/files', { 
+    params: { 
+      page,
+      search: searchTerm,
+      limit: 9 // Match the backend default or your preference
+    } 
+  });
   return response.data;
 };
 

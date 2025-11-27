@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, TextField, Box, Typography, Skeleton, Card, CardContent } from '@mui/material';
+import { Grid, TextField, Box, Typography, Skeleton, Card, CardContent, Pagination, Stack } from '@mui/material';
 import FileCard from '../components/FileCard';
 import { useFiles } from '../contexts/FileContext';
 import { useDebounce } from '../hooks/useDebounce';
@@ -21,13 +21,18 @@ const FileCardSkeleton = () => (
 
 const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { files, loading, fetchFiles } = useFiles();
+  const { files, loading, currentPage, totalPages, fetchFiles } = useFiles();
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
-    fetchFiles(debouncedSearchTerm);
+    // Fetch page 1 whenever the search term changes
+    fetchFiles(1, debouncedSearchTerm);
   }, [debouncedSearchTerm, fetchFiles]);
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    fetchFiles(value, debouncedSearchTerm);
+  };
 
   return (
     <>
@@ -46,14 +51,13 @@ const HomePage: React.FC = () => {
 
       <Grid container spacing={4}>
         {loading ? (
-          // Render 6 skeleton cards while loading
-          Array.from(new Array(6)).map((_, index) => (
+          // Render 9 skeleton cards to match the page limit
+          Array.from(new Array(9)).map((_, index) => (
             <Grid key={index} xs={12} sm={6} md={4}>
               <FileCardSkeleton />
             </Grid>
           ))
         ) : (
-          // Render the actual file cards when loading is complete
           files.map(file => (
             <Grid key={file.id} xs={12} sm={6} md={4}>
               <FileCard file={file} />
@@ -61,6 +65,18 @@ const HomePage: React.FC = () => {
           ))
         )}
       </Grid>
+      
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <Stack spacing={2} sx={{ mt: 4, alignItems: 'center' }}>
+          <Pagination 
+            count={totalPages} 
+            page={currentPage} 
+            onChange={handlePageChange} 
+            color="primary" 
+          />
+        </Stack>
+      )}
     </>
   );
 };
