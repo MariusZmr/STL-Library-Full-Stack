@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
-import * as api from '../services/api';
+import * as api from '../services/api'; // Import all of api to use updateFile
 import { StlFile } from '../types';
 import { toast } from 'react-toastify';
 
@@ -11,6 +11,7 @@ interface FileContextType {
   totalFiles: number;
   fetchFiles: (page?: number, searchTerm?: string) => Promise<void>;
   addFile: (formData: FormData) => Promise<void>;
+  updateFile: (fileId: string, name: string, description: string) => Promise<void>; // New function
   removeFile: (fileId: string) => Promise<void>;
 }
 
@@ -43,10 +44,26 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.uploadFile(formData);
       toast.success('File uploaded successfully!');
-      await fetchFiles(1); // Refetch from page 1 to see the new upload
+      await fetchFiles(currentPage); // Refetch current page to see the new upload
     } catch (err) {
       console.error(err);
       toast.error('Failed to upload file. Please try again.');
+      throw err;
+    }
+  };
+
+  const updateFile = async (fileId: string, name: string, description: string) => {
+    try {
+      const updatedFile = await api.updateFile(fileId, { name, description });
+      toast.success('File updated successfully!');
+      // Update the file in the local state
+      setFiles(prevFiles => 
+        prevFiles.map(file => (file.id === fileId ? { ...file, name, description } : file))
+      );
+      return updatedFile;
+    } catch (err) {
+      console.error('Error updating file:', err);
+      toast.error('Failed to update file. Please try again.');
       throw err;
     }
   };
@@ -57,7 +74,6 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.deleteFile(fileId);
       toast.success('File deleted successfully!');
-      // Refetch the current page in case the deletion affects pagination
       await fetchFiles(currentPage); 
     } catch (err) {
       console.error(err);
@@ -67,7 +83,7 @@ export const FileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <FileContext.Provider value={{ files, loading, currentPage, totalPages, totalFiles, fetchFiles, addFile, removeFile }}>
+    <FileContext.Provider value={{ files, loading, currentPage, totalPages, totalFiles, fetchFiles, addFile, updateFile, removeFile }}>
       {children}
     </FileContext.Provider>
   );

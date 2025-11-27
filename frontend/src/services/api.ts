@@ -73,3 +73,8 @@ export const getFileById = async (id: string): Promise<StlFile> => {
   return response.data;
 };
 
+export const updateFile = async (id: string, updates: { name: string; description: string }): Promise<StlFile> => {
+  const response = await apiClient.put(`/files/${id}`, updates);
+  return response.data;
+};
+

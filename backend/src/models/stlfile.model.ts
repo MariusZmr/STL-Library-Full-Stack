@@ -9,6 +9,7 @@ interface StlFileAttributes {
   description: string;
   s3Key: string; // The key of the object in the S3 bucket
   s3Url: string; // The full URL to the S3 object
+  thumbnailS3Url?: string; // New field for thumbnail URL (optional)
   userId: string; // Foreign key for User
 }
 
@@ -21,6 +22,7 @@ class StlFile extends Model<StlFileAttributes, StlFileCreationAttributes> implem
   public description!: string;
   public s3Key!: string;
   public s3Url!: string;
+  public thumbnailS3Url?: string; // New field
   public userId!: string;
 
   // Timestamps
@@ -50,6 +52,10 @@ StlFile.init(
     s3Url: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    thumbnailS3Url: { // New field definition
+      type: DataTypes.STRING,
+      allowNull: true, // Thumbnail is optional
     },
     userId: {
       type: DataTypes.UUID,
