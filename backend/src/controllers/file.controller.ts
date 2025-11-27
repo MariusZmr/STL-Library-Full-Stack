@@ -74,6 +74,8 @@ export const uploadFile = async (req: Request, res: Response) => {
     const file = req.file as S3File;
     const userId = req.user?.id;
 
+    console.log('Upload Debug: userId from JWT:', userId); // ADDED THIS LINE
+
     if (!file) {
         return res.status(400).json({ message: 'STL File not provided.' });
     }

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Import useRef
 import { useFiles } from '../contexts/FileContext';
 import { toast } from 'react-toastify';
-import StlViewer from '../components/StlViewer'; // Import the viewer
-import { Button } from '@/components/ui/button'; // shadcn/ui Button
-import { Input } from '@/components/ui/input';   // shadcn/ui Input
-import { Label } from '@/components/ui/label';   // shadcn/ui Label
-import { Textarea } from '@/components/ui/textarea'; // Import the Textarea component
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // shadcn/ui Card
-import { Skeleton } from '@/components/ui/skeleton'; // shadcn/ui Skeleton
+import StlViewer, { StlViewerRef } from '../components/StlViewer'; // Import StlViewerRef
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableHeader,
@@ -15,15 +15,22 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'; // shadcn/ui Table components
-import { Pencil, Trash2 } from 'lucide-react'; // Lucide icons
+} from '@/components/ui/table';
+import { Pencil, Trash2, Camera } from 'lucide-react'; // Import Camera icon
+import { StlFile } from '../types';
+import EditFileDialog from '../components/EditFileDialog';
 
 const AdminPage: React.FC = () => {
-  const { files, loading, addFile, removeFile } = useFiles();
+  const { files, loading, addFile, removeFile, updateFile } = useFiles();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [fileToEdit, setFileToEdit] = useState<StlFile | null>(null);
+  const [snapshotDataUrl, setSnapshotDataUrl] = useState<string | null>(null); // State for captured snapshot
+
+  const stlViewerRef = useRef<StlViewerRef>(null); // Ref for StlViewer
 
   // Effect to clean up object URL on component unmount
   useEffect(() => {
@@ -31,12 +38,19 @@ const AdminPage: React.FC = () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
+      if (snapshotDataUrl && snapshotDataUrl.startsWith('blob:')) { // Clean up snapshot if it's a blob URL
+        URL.revokeObjectURL(snapshotDataUrl);
+      }
     };
-  }, [previewUrl]);
+  }, [previewUrl, snapshotDataUrl]); // Add snapshotDataUrl to dependency array
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
+    }
+    if (snapshotDataUrl) { // Clear snapshot when new file selected
+      URL.revokeObjectURL(snapshotDataUrl);
+      setSnapshotDataUrl(null);
     }
     const file = event.target.files?.[0];
     if (file && file.name.toLowerCase().endsWith('.stl')) {
@@ -46,9 +60,24 @@ const AdminPage: React.FC = () => {
       if (file) {
         toast.warn('Please select a valid .stl file.');
       }
-      if(event.target) (event.target as HTMLInputElement).value = ''; // Clear file input
+      if(event.target) (event.target as HTMLInputElement).value = '';
       setSelectedFile(null);
       setPreviewUrl(null);
+    }
+  };
+
+  const handleTakeSnapshot = () => {
+    if (stlViewerRef.current) {
+      if (snapshotDataUrl && snapshotDataUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(snapshotDataUrl);
+      }
+      const dataUrl = stlViewerRef.current.takeSnapshot();
+      if (dataUrl) {
+        setSnapshotDataUrl(dataUrl);
+        toast.success('Snapshot captured!');
+      } else {
+        toast.error('Failed to capture snapshot.');
+      }
     }
   };
 
@@ -58,10 +87,16 @@ const AdminPage: React.FC = () => {
       toast.warn('All fields, including the file, are required.');
       return;
     }
+    if (!snapshotDataUrl) {
+        toast.warn('Please take a snapshot for the thumbnail.');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
     formData.append('file', selectedFile);
+    formData.append('thumbnail', snapshotDataUrl); // Append snapshot data
 
     try {
       await addFile(formData);
@@ -69,11 +104,21 @@ const AdminPage: React.FC = () => {
       setDescription('');
       setSelectedFile(null);
       setPreviewUrl(null);
+      setSnapshotDataUrl(null); // Clear snapshot on successful upload
       const fileInput = document.getElementById('file-input') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
     } catch (err) {
       // Handled by context
     }
+  };
+
+  const handleEditClick = (file: StlFile) => {
+    setFileToEdit(file);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEditedFile = async (fileId: string, newName: string, newDescription: string) => {
+    await updateFile(fileId, newName, newDescription);
   };
 
   return (
@@ -82,7 +127,7 @@ const AdminPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Upload Form */}
-        <Card className={previewUrl ? "" : "md:col-span-2"}>
+        <Card className={previewUrl || snapshotDataUrl ? "" : "md:col-span-2"}>
           <CardHeader>
             <CardTitle className="text-xl">Upload New STL File</CardTitle>
           </CardHeader>
@@ -108,14 +153,38 @@ const AdminPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Preview Pane */}
-        {previewUrl && (
+        {/* Preview and Snapshot Pane */}
+        {(previewUrl || snapshotDataUrl) && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Preview</CardTitle>
+              <CardTitle className="text-xl">Preview & Thumbnail</CardTitle>
             </CardHeader>
-            <CardContent className="h-64"> {/* Fixed height for preview */}
-              <StlViewer s3Url={previewUrl} />
+            <CardContent>
+              {snapshotDataUrl ? (
+                // Display captured snapshot
+                <div className="relative h-64 w-full border rounded-md overflow-hidden">
+                    <img src={snapshotDataUrl} alt="Captured Snapshot" className="h-full w-full object-contain" />
+                    <Button 
+                        variant="ghost" size="icon" 
+                        onClick={() => setSnapshotDataUrl(null)} 
+                        className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ) : (
+                // Display interactive 3D preview
+                previewUrl && (
+                    <div className="h-64 border rounded-md overflow-hidden">
+                        <StlViewer s3Url={previewUrl} ref={stlViewerRef} autoRotate={false} />
+                    </div>
+                )
+              )}
+              {previewUrl && !snapshotDataUrl && ( // Show take snapshot button only if preview is active and no snapshot taken
+                <Button onClick={handleTakeSnapshot} className="w-full mt-4">
+                  <Camera className="mr-2 h-4 w-4" /> Take Snapshot
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}
@@ -153,7 +222,7 @@ const AdminPage: React.FC = () => {
                     <TableCell className="font-medium">{file.name}</TableCell>
                     <TableCell>{file.description}</TableCell>
                     <TableCell className="text-right flex justify-end space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => toast.info('Editing is not implemented yet.')}>
+                      <Button variant="outline" size="icon" onClick={() => handleEditClick(file)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="destructive" size="icon" onClick={() => removeFile(file.id)}>
@@ -167,6 +236,13 @@ const AdminPage: React.FC = () => {
           </Table>
         </div>
       )}
+
+      <EditFileDialog
+        file={fileToEdit}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={handleSaveEditedFile}
+      />
     </div>
   );
 };
