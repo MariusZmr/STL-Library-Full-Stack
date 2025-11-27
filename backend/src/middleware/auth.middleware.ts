@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+// Middleware to authenticate user and attach user info (including role) to req.user
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,11 +14,11 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const token = authHeader.split(' ')[1];
 
   try {
+    // Decode JWT payload, which now includes 'role'
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // The decoded payload is attached to the request object.
-    // The 'user' property on Request was defined in 'backend/src/types/express.d.ts'
-    req.user = decoded as { id: string; email: string };
+    // Attach decoded user info (including role) to req.user
+    req.user = decoded as { id: string; email: string; role: string }; // Updated type
     
     next();
   } catch (error) {
@@ -25,4 +26,10 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export default authMiddleware;
+// Middleware to check if the authenticated user has the 'admin' role
+export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+  }
+  next();
+};
