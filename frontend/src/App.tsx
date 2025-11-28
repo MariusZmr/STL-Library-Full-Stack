@@ -11,7 +11,7 @@ function App() {
     <>
       <Navbar />
       {/* Replaced MUI Container with a div for main content */}
-      <main className="container mx-auto px-4 py-8"> 
+      <main className="container mx-auto px-4 py-8 pt-16"> 
         <FileProvider>
           <AppRoutes />
         </FileProvider>

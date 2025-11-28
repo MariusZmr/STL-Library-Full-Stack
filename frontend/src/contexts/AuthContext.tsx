@@ -29,15 +29,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to decode token and set user data
   const decodeAndSetUser = (jwtToken: string) => {
     try {
-      const decodedToken: { id: string; email: string; role: string; firstName: string; lastName: string } = jwtDecode(jwtToken);
-      setUser({
-        id: decodedToken.id,
-        email: decodedToken.email,
-        firstName: decodedToken.firstName,
-        lastName: decodedToken.lastName,
-        role: decodedToken.role,
-      });
+      const decodedToken: { id: string; email: string; role: string; exp: number; firstName?: string; lastName?: string } = jwtDecode(jwtToken);
+      if (decodedToken.exp * 1000 < Date.now()) { // Check if token is expired
+        logout();
+        return;
+      }
       setToken(jwtToken);
+      api.fetchCurrentUserDetails()
+        .then(userDetails => {
+          setUser(userDetails);
+        })
+        .catch(error => {
+          console.error('Failed to fetch user details after token decode:', error);
+          logout(); // Log out if fetching user details fails
+        });
     } catch (error) {
       console.error('Failed to decode token:', error);
       logout(); // Log out if token is invalid
@@ -47,16 +52,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     if (storedToken) {
-      decodeAndSetUser(storedToken); // Decode stored token on load
+      try {
+        const decodedToken: { exp: number } = jwtDecode(storedToken);
+        if (decodedToken.exp * 1000 < Date.now()) { // Check if token is expired
+          logout();
+          return;
+        }
+        api.fetchCurrentUserDetails()
+          .then(userDetails => {
+            setUser(userDetails);
+            setToken(storedToken);
+          })
+          .catch(error => {
+            console.error('Failed to fetch user details on auto-login:', error);
+            logout(); // Log out if fetching user details fails
+          });
+      } catch (error) {
+        console.error('Error processing stored token:', error);
+        logout();
+      }
     }
   }, []);
 
   const login = async (credentials: any) => {
     try {
       const response = await api.login(credentials);
-      // Backend now returns token and user, user object has role
-      decodeAndSetUser(response.token); // Decode and set user from response token
-      localStorage.setItem('authToken', response.token);
+      const token = response.token;
+      localStorage.setItem('authToken', token);
+
+      const userDetails = await api.fetchCurrentUserDetails();
+      setUser(userDetails);
+      setToken(token);
+
       toast.success('Login successful!');
     } catch (error) {
       console.error('Login failed:', error);

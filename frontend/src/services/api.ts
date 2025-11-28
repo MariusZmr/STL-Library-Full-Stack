@@ -103,4 +103,9 @@ export const deleteUser = async (id: string): Promise<{ message: string }> => {
   return response.data;
 };
 
+export const fetchCurrentUserDetails = async (): Promise<UserType> => {
+  const response = await apiClient.get('/users/me'); // Assuming this endpoint exists
+  return response.data;
+};
+
 

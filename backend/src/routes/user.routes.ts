@@ -1,8 +1,12 @@
 import { Router } from 'express';
-import { getAllUsers, updateUserRole, deleteUser } from '../controllers/user.controller';
-import { authMiddleware, managerMiddleware } from '../middleware/auth.middleware';
+import { getAllUsers, updateUserRole, deleteUser, getMe } from '../controllers/user.controller';
 
 const router = Router();
+
+// @route   GET /api/users/me
+// @desc    Get current authenticated user's details
+// @access  Private (Auth required)
+router.get('/me', authMiddleware, getMe);
 
 // @route   GET /api/users
 // @desc    Get all users
