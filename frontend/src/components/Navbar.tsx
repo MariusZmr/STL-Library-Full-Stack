@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
           {isAuthenticated ? (
             <>
               {user?.firstName && (
-                <span className="text-sm font-medium flex-shrink-0 text-white">
+                <span className="text-sm font-medium flex-shrink-0 text-foreground">
                   Welcome, <span className={`font-bold ${getUserNameColorClass(user?.role)}`}>{user?.firstName}</span>
                 </span>
               )} 

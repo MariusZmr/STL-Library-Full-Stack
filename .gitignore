@@ -18,3 +18,4 @@ yarn-error.log*
 
 # Fișiere specifice sistemului de operare
 .DS_Store
+*.md
