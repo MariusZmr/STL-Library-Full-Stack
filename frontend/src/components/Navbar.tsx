@@ -37,8 +37,8 @@ const Navbar: React.FC = () => {
           {isAuthenticated ? (
             <>
               {user?.firstName && (
-                <span className={`text-sm font-medium flex-shrink-0 ${getUserNameColorClass(user?.role)}`}>
-                  Welcome, {user?.firstName}
+                <span className="text-sm font-medium flex-shrink-0 text-white">
+                  Welcome, <span className={`font-bold ${getUserNameColorClass(user?.role)}`}>{user?.firstName}</span>
                 </span>
               )} 
               <Link to="/admin" className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-1 flex-shrink-0">
