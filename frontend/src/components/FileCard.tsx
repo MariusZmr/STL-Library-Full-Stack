@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import type { StlFile } from "../types";
 // import StlViewer from "./StlViewer"; // StlViewer is no longer used here
 import axios from "axios";
@@ -54,7 +54,11 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
         {/* Display thumbnail image instead of StlViewer */}
         <div className="relative h-[140px] w-full overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           {file.thumbnailS3Url ? (
-            <img src={file.thumbnailS3Url} alt={`Thumbnail for ${file.name}`} className="object-cover h-full w-full" />
+            <img
+              src={file.thumbnailS3Url}
+              alt={`Thumbnail for ${file.name}`}
+              className="object-cover h-full w-full"
+            />
           ) : (
             <span className="text-muted-foreground text-sm">No Thumbnail</span>
           )}

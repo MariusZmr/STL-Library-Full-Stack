@@ -78,3 +78,29 @@ export const updateFile = async (id: string, updates: { name: string; descriptio
   return response.data;
 };
 
+interface UserType { // This should match the UserType in AuthContext
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: 'user' | 'manager' | 'admin';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getAllUsers = async (): Promise<UserType[]> => {
+  const response = await apiClient.get('/users');
+  return response.data;
+};
+
+export const updateUserRole = async (id: string, role: 'user' | 'manager' | 'admin'): Promise<UserType> => {
+  const response = await apiClient.put(`/users/${id}/role`, { role });
+  return response.data;
+};
+
+export const deleteUser = async (id: string): Promise<{ message: string }> => {
+  const response = await apiClient.delete(`/users/${id}`);
+  return response.data;
+};
+
+

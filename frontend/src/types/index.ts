@@ -1,4 +1,5 @@
 export interface StlFile {
+  [x: string]: string | undefined;
   id: string;
   name: string;
   description: string;
