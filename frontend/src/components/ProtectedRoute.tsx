@@ -11,9 +11,9 @@ const ProtectedRoute: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Check for admin role
-  if (user?.role !== 'admin') {
-    toast.error('Access denied. Admin privileges required.');
+  // Check for admin or manager role
+  if (user?.role !== 'admin' && user?.role !== 'manager') { // Updated condition
+    toast.error('Access denied. Admin or Manager privileges required.'); // Updated message
     return <Navigate to="/" replace />; // Redirect to homepage or a 403 page
   }
 

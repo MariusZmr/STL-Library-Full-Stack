@@ -125,12 +125,20 @@ const AdminPage: React.FC = () => {
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6 text-center">Admin Panel</h1>
 
+      {/* User Management Link */}
+      <div className="mb-6 flex justify-end">
+        <Link to="/admin/users">
+          <Button variant="outline">
+            <Users className="mr-2 h-4 w-4" /> Manage Users
+          </Button>
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Upload Form */}
         <Card className={previewUrl || snapshotDataUrl ? "" : "md:col-span-2"}>
           <CardHeader>
             <CardTitle className="text-xl">Upload New STL File</CardTitle>
-          </CardHeader>
           <CardContent>
             <form onSubmit={handleUploadSubmit} className="space-y-4">
               <div className="grid gap-2">
