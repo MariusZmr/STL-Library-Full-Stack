@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../types';
 import { User } from '../models';
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
     const users = await User.findAll({
       attributes: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'updatedAt'],
@@ -16,7 +17,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUserRole = async (req: Request, res: Response) => {
+export const updateUserRole = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { role } = req.body;
   const requesterUserId = req.user?.id;
@@ -64,7 +65,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const requesterUserId = req.user?.id;
   const requesterUserRole = req.user?.role;
@@ -98,7 +99,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getMe = async (req: Request, res: Response) => {
+export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated.' });

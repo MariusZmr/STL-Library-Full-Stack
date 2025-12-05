@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getFiles, uploadFile, deleteFile, getFileById, updateFile } from '../controllers/file.controller'; // Import updateFile
 import upload from '../utils/fileUpload';
-import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware'; // Changed to named import for authMiddleware and added adminMiddleware
+import { authMiddleware, managerMiddleware } from '../middleware/auth.middleware'; // Changed to named import for authMiddleware and added managerMiddleware
 
 const router = Router();
 
@@ -18,17 +18,17 @@ router.get('/:id', getFileById); // New route
 // @route   PUT /api/files/:id
 // @desc    Update a file's details
 // @access  Private
-router.put('/:id', authMiddleware, adminMiddleware, updateFile); // Added adminMiddleware
+router.put('/:id', authMiddleware, managerMiddleware, updateFile); // Added managerMiddleware
 
 // @route   POST /api/files/upload
 // @desc    Upload a new STL file
 // @access  Private (requires auth and admin roles)
 // The 'file' field in the form-data is the name of the file input
-router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), uploadFile); // Added adminMiddleware
+router.post('/upload', authMiddleware, managerMiddleware, upload.single('file'), uploadFile); // Added managerMiddleware
 
 // @route   DELETE /api/files/:id
 // @desc    Delete a file
 // @access  Private (requires auth and admin roles)
-router.delete('/:id', authMiddleware, adminMiddleware, deleteFile); // Added adminMiddleware
+router.delete('/:id', authMiddleware, managerMiddleware, deleteFile); // Added managerMiddleware
 
 export default router;

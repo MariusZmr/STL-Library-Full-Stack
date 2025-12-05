@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../types';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Middleware to authenticate user and attach user info (including role) to req.user
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -27,7 +28,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 };
 
 // Middleware to check if the authenticated user has the 'admin' role
-export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
   }
@@ -35,7 +36,7 @@ export const adminMiddleware = (req: Request, res: Response, next: NextFunction)
 };
 
 // Middleware to check if the authenticated user has either 'admin' or 'manager' role
-export const managerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const managerMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'manager')) {
     return res.status(403).json({ message: 'Access denied. Manager or Admin privileges required.' });
   }

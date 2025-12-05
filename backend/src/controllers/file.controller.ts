@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../types';
 import { StlFile, User } from '../models';
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'; // Removed ObjectCannedACL
 import s3Client from '../config/s3';
@@ -69,7 +70,7 @@ export const getFiles = async (req: Request, res: Response) => {
     }
 };
 
-export const uploadFile = async (req: Request, res: Response) => {
+export const uploadFile = async (req: AuthRequest, res: Response) => {
     const { name, description, thumbnail } = req.body; // Get thumbnail data
     const file = req.file as S3File;
     const userId = req.user?.id;
@@ -113,7 +114,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteFile = async (req: Request, res: Response) => {
+export const deleteFile = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const userId = req.user?.id;
 
@@ -170,7 +171,7 @@ export const getFileById = async (req: Request, res: Response) => {
     }
 };
 
-export const updateFile = async (req: Request, res: Response) => {
+export const updateFile = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
     const userId = req.user?.id; // Assuming user ID is available from auth middleware

@@ -5,7 +5,6 @@ import { sequelize } from './models';
 import authRoutes from './routes/auth.routes';
 import fileRoutes from './routes/file.routes';
 import userRoutes from './routes/user.routes'; // Import user routes
-
 dotenv.config();
 
 const app = express();

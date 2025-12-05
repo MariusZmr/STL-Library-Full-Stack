@@ -1,10 +1,11 @@
-// /backend/src/types/express.d.ts
-declare namespace Express {
-    export interface Request {
-        user?: {
-            id: string;
-            email: string;
-            role: string; // Added role
-        };
-    }
+import { Request } from 'express';
+
+declare module 'express' {
+  export interface Request {
+    user?: {
+      id: string;
+      email: string;
+      role: string;
+    };
+  }
 }
